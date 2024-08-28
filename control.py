@@ -1,12 +1,14 @@
-import time
-import sys
+"""
+Example of how to send MANUAL_CONTROL messages to the autopilot using
+pymavlink.
+This message is able to fully replace the joystick inputs.
+"""
 
 # Import mavutil
 from pymavlink import mavutil
 
-
 # Create the connection
-master = mavutil.mavlink_connection("/dev/ttyACM0", baud=115200)
+master = mavutil.mavlink_connection('/dev/ttyACM0', baud=115200)
 # Wait a heartbeat before sending commands
 master.wait_heartbeat()
 

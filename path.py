@@ -29,11 +29,13 @@ class mission_item:
 #Arm the Rover
 def arm (the_connection):
     print("--Arming")
-
     the_connection.mav.command_long_send(the_connection.target_system, the_connection.target_component, mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM, 0, 1,0,0,0,0,0,0)
-
     ack(the_connection, "COMMAND_ACK")
- 
+
+def auto(the_connection):
+    print("-- Seting Auto")
+    the_connection.set_mode_auto()
+    ack(the_connection, "COMMAND_ACK")
 
 #Upload Mission
 def upload_misssion(the_connection, mission_items):
@@ -96,6 +98,8 @@ if __name__ == "__main__":
     #mission_waypoints.append(mission_item(2, 0, 42, -83, 0))
 
     upload_misssion(the_connection, mission_waypoints)
+
+    auto(the_connection)
 
     arm(the_connection)
 
