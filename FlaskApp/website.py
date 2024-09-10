@@ -1,6 +1,6 @@
 from flask import Flask, redirect, url_for, render_template, request
 from pymavlink import mavutil
-from paths.commands import arm_rover, disarm_rover
+from paths.commands import arm_rover, disarm_rover, control_rover
 
 app = Flask(__name__)
 
@@ -11,7 +11,7 @@ def home():
                 arm_rover()
                 return render_template('index.html', armed = "Armed")      
             elif "disable" in request.form:
-                disarm_rover()
+                control_rover()
                 return render_template("index.html", armed = "Disable")
     else:
           return render_template("index.html")
