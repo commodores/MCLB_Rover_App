@@ -10,22 +10,21 @@ from pymavlink import mavutil
 
 
 #Class for formatting the Mission Ite,
-
 class mission_item:
-    def __init__(self, seq, current, x, y, z):
-        self.seq = seq
-        self.frame = mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT
-        self.command = mavutil.mavlink.MAV_CMD_NAV_WAYPOINT
-        self.current = current
-        self.auto = 1
-        self.param1 = 0.0
-        self.param2 = 2.00
-        self.param3 = 20.00
-        self.param4 = math.nan #idk
-        self.param5 = x
-        self.param6 = y 
-        self.param7 = z
-        self.mission_type = 0
+        def __init__(self, seq, current, x, y, z):
+            self.seq = seq
+            self.frame = mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT
+            self.command = mavutil.mavlink.MAV_CMD_NAV_WAYPOINT
+            self.current = current
+            self.auto = 1
+            self.param1 = 0.0
+            self.param2 = 2.00
+            self.param3 = 20.00
+            self.param4 = math.nan #idk
+            self.param5 = x
+            self.param6 = y 
+            self.param7 = z
+            self.mission_type = 0
 
 #Arm the Rover
 def arm (the_connection):
@@ -83,8 +82,25 @@ def ack(the_connection, keyword):
 
 
 # Main Function
+#if __name__ == "__main__":
+def mission():
 
-if __name__ == "__main__":
+    class mission_item:
+        def __init__(self, seq, current, x, y, z):
+            self.seq = seq
+            self.frame = mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT
+            self.command = mavutil.mavlink.MAV_CMD_NAV_WAYPOINT
+            self.current = current
+            self.auto = 1
+            self.param1 = 0.0
+            self.param2 = 2.00
+            self.param3 = 20.00
+            self.param4 = math.nan #idk
+            self.param5 = x
+            self.param6 = y 
+            self.param7 = z
+            self.mission_type = 0
+
     print("-- Program Started")
     the_connection = mavutil.mavlink_connection("/dev/ttyACM0", baud=115200)
 
@@ -95,15 +111,13 @@ if __name__ == "__main__":
 
     mission_waypoints = []
 
-    mission_waypoints.append(mission_item(0, 0, 31.5559748, -84.1694355, 0))
-    #mission_waypoints.append(mission_item(1, 0, 42, -83, 0))
-    #mission_waypoints.append(mission_item(2, 0, 42, -83, 0))
+    mission_waypoints.append(mission_item(0, 0, 59.000000, 1, 0))
+    mission_waypoints.append(mission_item(1, 0, 31.55599420, -84.16967420, 0))
+    mission_waypoints.append(mission_item(2, 0, 31.55608680, -84.16967350, 0))
 
     upload_misssion(the_connection, mission_waypoints)
 
     auto(the_connection)
-
-    arm(the_connection)
 
     start_mission(the_connection)
 
@@ -114,8 +128,8 @@ if __name__ == "__main__":
 
 
 
-        
-        
+
+
 
 
 
