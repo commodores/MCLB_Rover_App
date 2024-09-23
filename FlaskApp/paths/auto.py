@@ -10,6 +10,7 @@ from pymavlink import mavutil
 
 
 #Class for formatting the Mission Ite,
+
 class mission_item:
         def __init__(self, seq, current, x, y, z):
             self.seq = seq

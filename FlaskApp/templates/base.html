@@ -16,10 +16,77 @@ h1 {
 .buttonDisable {
     background-color:  #dc3545; /* Red */
 }
+
+.leftCard{
+  float: left;
+  width: 50%;
+  padding: 10px;
+}
+
+.midCard{
+  float: auto;
+  width: 50%;
+  padding: 10px;
+}
+
+.rightCard{
+  float: right;
+  width: 50%;
+  padding: 10px 0;
+}
+
+
 </style>
     <body>
         <h1> Haz Rover</h1>
-        {% block content %}
-        {% endblock %}
+<div class="leftCard" style="width: 18rem;">
+    <div class="card-header">
+        Rover Settings
+    </div>
+    <ul class="list-group list-group-flush">
+        <li>
+            <select name="Paths to Choose" class="form-select" aria-label="Default select example">
+                <option selected>Path Options</option>
+                <option type="submit" value="warehouse">To Warehouse</option>
+                <option type = "submit" name="home">Back to Home</option>
+            </select>
+         </li>      
+         <li class="list-group-item">
+            <input type="submit" name="Submit Mission"></input>
+        </li>
+        <li class="list-group-item">
+            <button type="submit" name="reset_path" class="btn btn-secondary">Reset Path</button>
+        </li>
+        <li class="list-group-item">
+            <button type="submit" name="switch_modes" class="btn btn-secondary">Switch Modes</button>
+        </li>
+    </ul>
+</div>
+
+<div class="midCard">
+    <div class="card-header">
+      Rover Status
+    </div>
+    <div class="card-body">
+      <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+    </div>
+    <div class="card-footer text-body-secondary">
+      update
+    </div>
+</div>
+
+<div class="rightCard" style="width: 18rem;">
+    <div class="card-header">
+      Messages
+    </div>
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item">An item</li>
+      <li class="list-group-item">A second item</li>
+      <li class="list-group-item">A third item</li>
+    </ul>
+</div>
+
+      {% block content %}
+      {% endblock %}
     </body>
 </html>

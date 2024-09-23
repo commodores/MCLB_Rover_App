@@ -1,8 +1,9 @@
 from flask import Flask, redirect, url_for, render_template, request
 from pymavlink import mavutil 
 import math
-from paths.commands import arm_rover, disarm_rover
-from paths.auto import mission
+from paths.commands import arm_rover, disarm_rover, mission_reset, control_rover
+from paths.auto import mission, mission_item
+from paths.path import mission2
 
 app = Flask(__name__)
 
@@ -11,30 +12,43 @@ app = Flask(__name__)
 @app.route("/", methods=["POST", "GET"])
 def home():
     if request.method == "POST":
-            if "enable" in request.form:
-                arm_rover()
-                return render_template('index.html', armed = "Armed")      
-            elif "disable" in request.form:
-                disarm_rover()
-                return render_template("index.html", armed = "Disable")
-            elif "submit" in request.form:
-                 render_template("index.html",  path = "Warehouse")  
-                 mission()
-                 return       
+        if "enable" in request.form:
+            arm_rover()
+            return render_template('index.html', armed = "Armed")      
+        elif "disable" in request.form:
+            disarm_rover()
+            return render_template("index.html", armed = "Disabled")
+        elif "reset_path" in request.form:
+            mission_reset()
+            return render_template("index.html", armed = "Disabled")
+        elif "warehouse" in request.form: 
+            render_template("index.html")
+        return mission()
     else:
-          return render_template("index.html")
+            return render_template("index.html")
           
         
 
-# Other web page routes(Did in tutorial)
-@app.route("/login", methods=["POST", "GET"])
+# New UI version of app
+@app.route("/ui", methods=["POST", "GET"])
 def login():
     if request.method == "POST":
-        user = request.form["nm"]
-        return redirect(url_for("user", usr=user))
+        if "enable" in request.form:
+            arm_rover()
+            return render_template('example.html', armed = "Armed")      
+        if "disable" in request.form:
+            disarm_rover()
+            return render_template("example.html", armed = "Disabled")
+        if "reset_path" in request.form:
+            mission_reset()
+            return render_template("example.html", armed = "Disabled")
+        if "manual_control" in request.form: 
+            control_rover()
+            return render_template("example.html")
+        if "warehouse" in request.form: 
+           return mission()
     else:
-        return render_template("login.html")
-
+            return render_template("example.html")
 
 @app.route("/<usr>")
 def user(usr):

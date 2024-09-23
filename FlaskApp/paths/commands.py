@@ -72,6 +72,28 @@ def control_rover():
         500, # 500 means neutral throttle
         0,
         buttons)
+    
+def mission_reset():
+    # Create the connection
+    master = mavutil.mavlink_connection("/dev/ttyACM0", baud=115200)
+    # Wait a heartbeat before sending commands
+    master.wait_heartbeat()
+
+    print("sending commands")
+
+    master.mav.mission_clear_all_send(master.target_system, master.target_component)
+
+   # master.mav.command_long_send(
+        #master.target_system,
+        #master.target_component,
+        #mavutil.mavlink.MISSION_RESET_DEFAULT,
+        #master.mav.mission_clear_all_send,
+  #    ,
+     #   0,
+   #     0, 0, 0, 0, 0, 0, 0)
+
+    # wait until disarming confirmed
+    print('Mission Reset')
 
 
 

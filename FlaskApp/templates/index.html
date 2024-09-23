@@ -13,15 +13,16 @@
     </div>
     <select name="Paths to Choose" class="form-select" aria-label="Default select example">
         <option selected>Path Options</option>
-        <option type="submit" name="warehouse">To Warehouse</option>
+        <option type="submit" value="warehouse">To Warehouse</option>
         <option type = "submit" name="home">Back to Home</option>
-      </select>
-      <input type="submit" value="Submit"> Start Robot</input>
+    </select>
+      <input type="submit"> Start Robot</input>
 
 
 <form class="button" action="paths/arm.py" method="post">
         <button type="submit"  name="enable" class="btn btn-primary btn-lg btn-block buttonStart">Enable</button>
         <button type="submit" name="disable" class="btn btn-secondary btn-lg btn-block buttonDisable">Disable</button>
+        <button type="submit" name="reset_path" class="btn btn-secondary btn-lg btn-block">Reset Path</button>
         <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
