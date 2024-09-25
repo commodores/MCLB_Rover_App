@@ -1,20 +1,21 @@
-from flask import Flask, redirect, url_for, render_template, request
+from flask import Flask, redirect, url_for, render_template, request, flash
 from pymavlink import mavutil 
 import math
-from paths.commands import arm_rover, disarm_rover, mission_reset, control_rover
-from paths.auto import mission, mission_item
-from paths.path import mission2
+from paths.commands import arm_rover, disarm_rover, mission_reset, switch_modes, mission
+
 
 app = Flask(__name__)
 
-#the_connection = mavutil.mavlink_connection("/dev/ttyACM0", baud=115200)
+
+
 
 @app.route("/", methods=["POST", "GET"])
 def home():
     if request.method == "POST":
         if "enable" in request.form:
+            flash("Armed")
             arm_rover()
-            return render_template('index.html', armed = "Armed")      
+            return render_template('index.html', flash("Armed"))      
         elif "disable" in request.form:
             disarm_rover()
             return render_template("index.html", armed = "Disabled")
@@ -31,7 +32,7 @@ def home():
 
 # New UI version of app
 @app.route("/ui", methods=["POST", "GET"])
-def login():
+def ui():
     if request.method == "POST":
         if "enable" in request.form:
             arm_rover()
@@ -42,13 +43,21 @@ def login():
         if "reset_path" in request.form:
             mission_reset()
             return render_template("example.html", armed = "Disabled")
-        if "manual_control" in request.form: 
-            control_rover()
+        if "switch_modes" in request.form: 
+            switch_modes()
             return render_template("example.html")
-        if "warehouse" in request.form: 
-           return mission()
+        if "warehouse" in request.form:
+            render_template("index.html") 
+        return mission()
     else:
             return render_template("example.html")
+    
+@app.route('/print')
+def printMsg():
+    app.logger.warning('testing warning log')
+    app.logger.error('testing error log')
+    app.logger.info('testing info log')
+    return "Check your console"
 
 @app.route("/<usr>")
 def user(usr):

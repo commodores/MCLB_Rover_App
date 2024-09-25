@@ -87,6 +87,7 @@ def mission2():
     if __name__ == "__main__":
         print("-- Program Started")
         the_connection = mavutil.mavlink_connection("/dev/ttyACM0", baud=115200)
+        the_connection.wait_heartbeat()
 
         while(the_connection.target_system == 0):
             print("-- Checking Heartbeat")
