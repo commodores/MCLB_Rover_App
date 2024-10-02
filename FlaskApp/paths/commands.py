@@ -1,5 +1,6 @@
 # Import mavutil
 import sys
+import time
 import math
 from pymavlink import mavutil
 from paths.auto import auto, upload_misssion, set_return, start_mission
@@ -21,7 +22,7 @@ def arm_rover():
         0, 1, 0, 0, 0, 0, 0, 0)
 
     # wait until arming confirmed (can manually check with master.motors_armed())
-    print("Waiting for the vehicle to arm")
+    action_messages = print("Waiting for the vehicle to arm")
     the_connection.motors_armed_wait()
     print('Armed!')
     #msg = master.recv_match(type="COMMAND_ACK", blocking=True)
@@ -181,3 +182,51 @@ def mission():
 
 
 
+def create_new_connection():
+    # Create the connection
+    master = mavutil.mavlink_connection("/dev/ttyACM0", baud=115200)
+    # Wait a heartbeat before sending commands
+    master.wait_heartbeat()
+
+    print("New Connection Made")
+
+def mission_pause():
+     # Wait a heartbeat before sending commands
+    the_connection.wait_heartbeat()
+
+# Send command to pause the mission (MAV_CMD_DO_PAUSE_CONTINUE)
+    the_connection.mav.command_long_send(
+        the_connection.target_system,
+        the_connection.target_component,
+        mavutil.mavlink.MAV_CMD_DO_PAUSE_CONTINUE,
+        0, # Confirmation
+        19,  # 19 pauses the mission (20 would continue the mission)
+        0, 0, 0, 0, 0, 0)
+
+    # wait until disarming confirmed
+    print("Waiting for the vehicle pause mission")
+    the_connection.motors_disarmed_wait()
+    print('Mission Paused!')
+
+def manual_drive_mode():
+    # Choose a mode
+    mode = 'MANUAL'
+
+    # Get mode ID
+    mode_id = the_connection.mode_mapping()[mode]
+
+    
+    # Check if mode is available
+    if mode not in the_connection.mode_mapping():
+        print('Unknown mode : {}'.format(mode))
+        print('Try:', list(the_connection.mode_mapping().keys()))
+        sys.exit(1)
+
+    the_connection.mav.set_mode_send(
+    the_connection.target_system,
+    mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+    mode_id)
+
+    print(f"Flight mode changed to {mode}")
+
+    

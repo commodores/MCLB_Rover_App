@@ -1,4 +1,5 @@
 # Import mavutil
+from asyncio import open_connection
 import math
 from pymavlink import mavutil
 
@@ -80,4 +81,44 @@ def start_mission(the_connection):
 def ack(the_connection, keyword):
     print("-- Message Read " + str(the_connection.recv_match(type=keyword, blocking =True)))
 
+
+def connection():
+
+
+    print("-- Program Started")
+
+# Create the connection
+    the_connection = mavutil.mavlink_connection("/dev/ttyACM0", baud=115200)
+    the_connection.wait_heartbeat()
+
+    while(the_connection.target_system == 0):
+            print("-- Checking Heartbeat")
+            the_connection.wait_heartbeat()
+            print(" -- heatbeat from system (system %u component %u)" % (the_connection.target_system, the_connection.target_component))
+
+
+    while(the_connection.target_system == 0):
+        print("-- Checking Heartbeat")
+        the_connection.wait_heartbeat()
+        print(" -- heatbeat from system (system %u component %u)" % (the_connection.target_system, the_connection.target_component))
+
+def waypoints():
+    mission_waypoints = []
+
+    mission_waypoints.append(mission_item(0, 0, 59.000000, 1, 0))
+    mission_waypoints.append(mission_item(1, 0, 31.55599420, -84.16967420, 0))
+    mission_waypoints.append(mission_item(2, 0, 31.55608680, -84.16967350, 0))
+
+def mission():
+
+    upload_misssion(connection(), waypoints())
+
+    auto(connection())
+
+    start_mission(connection())
+
+    for mission_item in waypoints:
+        print("-- Message Read " + str(connection().recv_match(type="MISSION_ITEM_REACHED", condition= "MISSION_ITEM_REACHED.seq =={0}".format(mission_item.seq), blocking =True)))
+
+    set_return(connection())
 
