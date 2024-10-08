@@ -4,7 +4,7 @@ from datetime import timedelta
 import math
 import threading
 from paths.commands import arm_rover, disarm_rover, mission_reset, switch_modes, control_rover, create_new_connection, mission, mission_pause, manual_drive_mode
-from paths.auto import connection, upload_misssion, auto,  start_mission, waypoints
+from paths.joystick import joystick
 
 
 app = Flask(__name__)
@@ -51,7 +51,7 @@ def home():
             return render_template("example.html")
         
         if "manual_drive" in request.form: 
-            manual_drive_mode()
+            joystick()
             flash("Flight mode changed to MANUAL", "info")
             return render_template("example.html")
         

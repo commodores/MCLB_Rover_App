@@ -1,115 +1,96 @@
- # Import mavutil
+"""
+Example of how to use RC_CHANNEL_OVERRIDE messages to force input channels
+in Ardupilot. These effectively replace the input channels (from joystick
+or radio), NOT the output channels going to thrusters and servos.
+"""
+
+# Import mavutil
 import sys
-import time
-import math
-from typing import Iterable, Union
 from pymavlink import mavutil
 
-
 # Create the connection
-the_connection = mavutil.mavlink_connection("/dev/ttyACM0", baud=115200)
-# Wait a heartbeat before sending commands
-the_connection.wait_heartbeat()
+the_connection = mavutil.mavlink_connection("/dev/ttyACM0", baud=9600) 
+
+def joystick():
+    # Wait a heartbeat before sending commands
+    the_connection.wait_heartbeat()
+
+      # Choose a mode
+    mode = 'AUTO'
+
+    # Check if mode is available
+    if mode not in the_connection.mode_mapping():
+        print('Unknown mode : {}'.format(mode))
+        print('Try:', list(the_connection.mode_mapping().keys()))
+        sys.exit(1)
+
+    # Get mode ID
+    mode_id = the_connection.mode_mapping()[mode]
+    # Set new mode
+    # the_connection.mav.command_long_send(
+    #    the_connection.target_system, the_connection.target_component,
+    #    mavutil.mavlink.MAV_CMD_DO_SET_MODE, 0,
+    #    0, mode_id, 0, 0, 0, 0, 0) or:
+    # the_connection.set_mode(mode_id) or:
+    the_connection.mav.set_mode_send(
+        the_connection.target_system,
+        mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+        mode_id)
+
+    while True:
+        # Wait for ACK command
+        # Would be good to add mechanism to avoid endlessly blocking
+        # if the autopilot sends a NACK or never receives the message
+        ack_msg = the_connection.recv_match(type='COMMAND_ACK', blocking=True)
+        ack_msg = ack_msg.to_dict()
+
+        # Continue waiting if the acknowledged command is not `set_mode`
+        if ack_msg['command'] != mavutil.mavlink.MAV_CMD_DO_SET_MODE:
+            continue
+
+        # Print the ACK result !
+        print(mavutil.mavlink.enums['MAV_RESULT'][ack_msg['result']].description)
+        break
 
 
-# Choose a mode
-mode = 'MANUAL'
 
-# Get mode ID
-mode_id = the_connection.mode_mapping()[mode]
+    # Create a function to send RC values
+    # More information about Joystick channels
+    # here: https://www.ardusub.com/operators-manual/rc-input-and-output.html#rc-inputs
+    def set_rc_channel_pwm(channel_id, pwm=1500):
+        """ Set RC channel pwm value
+        Args:
+            channel_id (TYPE): Channel ID
+            pwm (int, optional): Channel pwm value 1100-1900
+        """
+        if channel_id < 1 or channel_id > 18:
+            print("Channel does not exist.")
+            return
+
+        # Mavlink 2 supports up to 18 channels:
+        # https://mavlink.io/en/messages/common.html#RC_CHANNELS_OVERRIDE
+        rc_channel_values = [65535 for _ in range(18)]
+        rc_channel_values[channel_id - 1] = pwm
+        the_connection.mav.rc_channels_override_send(
+            the_connection.target_system,                # target_system
+            the_connection.target_component,             # target_component
+            *rc_channel_values)                  # RC channel list, in microseconds.
 
 
-# Check if mode is available
-if mode not in the_connection.mode_mapping():
-    print('Unknown mode : {}'.format(mode))
-    print('Try:', list(the_connection.mode_mapping().keys()))
-    sys.exit(1)
+    # Set some roll
+    set_rc_channel_pwm(2, 1600)
 
-the_connection.mav.set_mode_send(
-the_connection.target_system,
-mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-mode_id)
+    # Set some yaw
+    set_rc_channel_pwm(4, 1600)
 
-print(f"Flight mode changed to {mode}")
+    set_rc_channel_pwm(4, 1600)
 
+    # The camera pwm value sets the servo speed of a sweep from the current angle to
+    #  the min/max camera angle. It does not set the servo position.
+    # Set camera tilt to 45º (max) with full speed
+    set_rc_channel_pwm(8, 1900)
 
-
-AXIS_UNUSED = 0x7fff # INT16_MAX (manual control)
-
-# from ardusub.com/developers/full-parameter-list.html#btnn-parameters
-ARDUSUB_BTN_FUNCTIONS = {
-    'disabled': 0,
-    'shift': 1,
-    'arm': 3,
-    'disarm': 4,
-    'mode_manual': 5,
-    'mode_depth_hold': 7,
-    'mount_center': 21,
-    'mount_tilt_up': 22,
-    'mount_tilt_down': 23,
-    'lights1_brighter': 32,
-    'lights1_dimmer': 33,
-    'gain_inc': 42,
-    'gain_dec': 43,
-    # ... any others you're interested in
-}
-
-def set_param(autopilot, name: str, value: float, type: int,
-              timeout: float=1):
-    name = name.encode('utf8')
-    autopilot.mav.param_set_send(
-        autopilot.target_system, autopilot.target_component,
-        name, value, type
-    )
-    
-    msg = autopilot.recv_match(type='PARAM_VALUE', blocking=True,
-                               timeout=timeout)
-    # TODO: retries and/or verification that parameter is correctly set
-    return msg
-
-def set_button_function(autopilot, button: int, function: Union[int,str],
-                        shifted=False):
-    shifted = 'S' if shifted else ''
-    param = f'BTN{button}_{shifted}FUNCTION'
-    if isinstance(function, str):
-        function = ARDUSUB_BTN_FUNCTIONS[function.lower()]
-    type = mavutil.mavlink.MAV_PARAM_TYPE_INT8
-    return set_param(autopilot, param, function, type)
-
-def send_manual_control(autopilot, x=AXIS_UNUSED, y=AXIS_UNUSED, z=AXIS_UNUSED, 
-                        r=AXIS_UNUSED, pressed_buttons: Union[int, Iterable[int]] = 0):
-    ''' 
-    'pressed_buttons' is either 
-        a bit-field with 1 bits for pressed buttons (bit 0 -> button 0), or 
-        an iterable specifying which buttons are pressed (e.g. [0,3,4])
-    '''
-    if not isinstance(pressed_buttons, int):
-        # convert iterable into bit-field values
-        pressed_buttons = sum(1 << button for button in pressed_buttons)
-    autopilot.mav.manual_control_send(
-        autopilot.target_system,
-        x, y, z, r,
-        pressed_buttons
-    )
-
-def press_release_buttons(autopilot, buttons):
-    send_manual_control(autopilot, pressed_buttons=buttons)
-    send_manual_control(autopilot, pressed_buttons=0)
-
-autopilot = mavutil.mavlink_connection('udpin:0.0.0.0:14550')
-autopilot.wait_heartbeat()
-print('autopilot connected!')
-
-# assign button 2 to the 'shift' functionality
-set_button_function(autopilot, 2, 'shift')
-# assign button 1 to brighten lights1 on normal press, and dim them on shifted press
-set_button_function(autopilot, 1, 'lights1_brighter')
-set_button_function(autopilot, 1, 'lights1_dimmer', shifted=True)
-
-press_release_buttons(autopilot, [1]) # make lights1 brighter
-time.sleep(2) # wait a couple of seconds
-press_release_buttons(autopilot, [1]) # make them another step brighter
-time.sleep(2.5) # wait some more
-press_release_buttons(autopilot, [1, 2]) # make them dimmer
-time.sleep(1)
-press_release_buttons(autopilot, [1, 2]) # dim once more
+    # Set channel 12 to 1500us
+    # This can be used to control a device connected to a servo output by setting the
+    # SERVO[N]_Function to RCIN12 (Where N is one of the PWM outputs)
+    set_rc_channel_pwm(12, 1500)

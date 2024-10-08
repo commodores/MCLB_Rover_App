@@ -7,11 +7,13 @@ from paths.auto import auto, upload_misssion, set_return, start_mission
 
 
  # Create the connection
-the_connection = mavutil.mavlink_connection("/dev/ttyACM0", baud=115200)
+the_connection = mavutil.mavlink_connection("/dev/ttyACM0", baud=9600) 
+time.sleep(2)
 
 def arm_rover():
     # Wait a heartbeat before sending commands
     the_connection.wait_heartbeat()
+
 
     # Arm
     # master.arducopter_arm() or:
@@ -31,6 +33,7 @@ def arm_rover():
 def disarm_rover():
     # Wait a heartbeat before sending commands
     the_connection.wait_heartbeat()
+    
 
     # Disarm
     # master.arducopter_disarm() or:
@@ -49,6 +52,7 @@ def disarm_rover():
 def control_rover():
     # Wait a heartbeat before sending commands
     the_connection.wait_heartbeat()
+    
 
     # Send a positive x value, negative y, negative z,
     # positive rotation and no button.
@@ -77,6 +81,7 @@ def control_rover():
     
 def mission_reset():
     the_connection.wait_heartbeat()
+   
 
     print("sending commands")
 
@@ -99,6 +104,7 @@ def switch_modes():
 
     # Wait a heartbeat before sending commands
     the_connection.wait_heartbeat()
+  
 
     # Choose a mode
     mode = 'AUTO'
@@ -162,6 +168,7 @@ def mission():
         print("-- Checking Heartbeat")
         the_connection.wait_heartbeat()
         print(" -- heatbeat from system (system %u component %u)" % (the_connection.target_system, the_connection.target_component))
+        
 
     mission_waypoints = []
 
@@ -185,6 +192,7 @@ def mission():
 def create_new_connection():
     # Create the connection
     master = mavutil.mavlink_connection("/dev/ttyACM0", baud=115200)
+    time.sleep(2)
     # Wait a heartbeat before sending commands
     master.wait_heartbeat()
 
@@ -193,6 +201,7 @@ def create_new_connection():
 def mission_pause():
      # Wait a heartbeat before sending commands
     the_connection.wait_heartbeat()
+    
 
 # Send command to pause the mission (MAV_CMD_DO_PAUSE_CONTINUE)
     the_connection.mav.command_long_send(
