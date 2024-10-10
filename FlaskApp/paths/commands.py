@@ -1,33 +1,60 @@
 # Import mavutil
+from asyncio import open_connection
 import sys
 import time
 import math
+import pygame
 from pymavlink import mavutil
+import serial
 from paths.auto import auto, upload_misssion, set_return, start_mission
+from commands.arm import arm_rover
+from flask import Flask, flash
+from pymavlink import mavutil 
+from datetime import timedelta
+import math
+from threading import Lock
+import threading
+import os
+import sys
+import fcntl
+from pymavlink import mavutil
+import time
 
 
- # Create the connection
-the_connection = mavutil.mavlink_connection("/dev/ttyACM0", baud=9600) 
-time.sleep(2)
+# Initialize mavlink connection and a lock
+the_connection= mavutil.mavlink_connection("/dev/ttyACM0", baud=115200)
+serial_lock = threading.Lock()
+
+
+#Initialize Lock
+lock = Lock()
+
+# Flag to control the mission
+mission_running = False
+
 
 def arm_rover():
+
     # Wait a heartbeat before sending commands
     the_connection.wait_heartbeat()
 
 
     # Arm
-    # master.arducopter_arm() or:
+    # the_connection.arducopter_arm() or:
     the_connection.mav.command_long_send(
         the_connection.target_system,
         the_connection.target_component,
         mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
         0, 1, 0, 0, 0, 0, 0, 0)
 
-    # wait until arming confirmed (can manually check with master.motors_armed())
-    action_messages = print("Waiting for the vehicle to arm")
+    # wait until arming confirmed (can manually check with the_connection.motors_armed())
+
+    print("Waiting for the vehicle to arm")
+    flash("Waiting for the vehicle to arm", "info")
     the_connection.motors_armed_wait()
+    flash("Armed", "info")
     print('Armed!')
-    #msg = master.recv_match(type="COMMAND_ACK", blocking=True)
+    #msg = the_connection.recv_match(type="COMMAND_ACK", blocking=True)
     #print(msg)
 
 def disarm_rover():
@@ -36,7 +63,7 @@ def disarm_rover():
     
 
     # Disarm
-    # master.arducopter_disarm() or:
+    # the_connection.arducopter_disarm() or:
     the_connection.mav.command_long_send(
         the_connection.target_system,
         the_connection.target_component,
@@ -46,8 +73,10 @@ def disarm_rover():
 
     # wait until disarming confirmed
     print("Waiting for the vehicle to dis arm")
+    flash("Waiting for the vehicle to disarm", "info")
     the_connection.motors_armed_wait()
     print('Disarmed!')
+    flash("Rover is Disable and Dismarmed", "info")
 
 def control_rover():
     # Wait a heartbeat before sending commands
@@ -87,11 +116,11 @@ def mission_reset():
 
     the_connection.mav.mission_clear_all_send(the_connection.target_system, the_connection.target_component)
 
-   # master.mav.command_long_send(
-        #master.target_system,
-        #master.target_component,
+   # the_connection.mav.command_long_send(
+        #the_connection.target_system,
+        #the_connection.target_component,
         #mavutil.mavlink.MISSION_RESET_DEFAULT,
-        #master.mav.mission_clear_all_send,
+        #the_connection.mav.mission_clear_all_send,
   #    ,
      #   0,
    #     0, 0, 0, 0, 0, 0, 0)
@@ -118,11 +147,11 @@ def switch_modes():
     # Get mode ID
     mode_id = the_connection.mode_mapping()[mode]
     # Set new mode
-    # master.mav.command_long_send(
-    #    master.target_system, master.target_component,
+    # the_connection.mav.command_long_send(
+    #    the_connection.target_system, the_connection.target_component,
     #    mavutil.mavlink.MAV_CMD_DO_SET_MODE, 0,
     #    0, mode_id, 0, 0, 0, 0, 0) or:
-    # master.set_mode(mode_id) or:
+    # the_connection.set_mode(mode_id) or:
     the_connection.mav.set_mode_send(
         the_connection.target_system,
         mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
@@ -162,39 +191,56 @@ def mission():
             self.param7 = z
             self.mission_type = 0
 
-    print("-- Program Started")
+    global mission_running
+    mission_running = True
+    while mission_running:
+        with serial_lock:
+            try:
 
-    while(the_connection.target_system == 0):
-        print("-- Checking Heartbeat")
-        the_connection.wait_heartbeat()
-        print(" -- heatbeat from system (system %u component %u)" % (the_connection.target_system, the_connection.target_component))
-        
+                print("-- Program Started")
 
-    mission_waypoints = []
+                while(the_connection.target_system == 0):
+                    print("-- Checking Heartbeat")
+                    the_connection.wait_heartbeat()
+                    print(" -- heatbeat from system (system %u component %u)" % (the_connection.target_system, the_connection.target_component))
+                    
 
-    mission_waypoints.append(mission_item(0, 0, 59.000000, 1, 0))
-    mission_waypoints.append(mission_item(1, 0, 31.55599420, -84.16967420, 0))
-    mission_waypoints.append(mission_item(2, 0, 31.55608680, -84.16967350, 0))
+                mission_waypoints = []
 
-    upload_misssion(the_connection, mission_waypoints)
+                mission_waypoints.append(mission_item(0, 0, 59.000000, 1, 0))
+                mission_waypoints.append(mission_item(1, 0, 31.55599420, -84.16967420, 0))
+                mission_waypoints.append(mission_item(2, 0, 31.55608680, -84.16967350, 0))
 
-    auto(the_connection)
+                upload_misssion(the_connection, mission_waypoints)
 
-    start_mission(the_connection)
+                auto(the_connection)
 
-    for mission_item in mission_waypoints:
-        print("-- Message Read " + str(the_connection.recv_match(type="MISSION_ITEM_REACHED", condition= "MISSION_ITEM_REACHED.seq =={0}".format(mission_item.seq), blocking =True)))
+                start_mission(the_connection)
 
-    set_return(the_connection)
+                flash("Rover is continuing the mission...", "info")
+
+                for mission_item in mission_waypoints:
+                    print("-- Message Read " + str(the_connection.recv_match(type="MISSION_ITEM_REACHED", condition= "MISSION_ITEM_REACHED.seq =={0}".format(mission_item.seq), blocking =True)))
+
+                set_return(the_connection)
+
+            except Exception as e:
+                flash(f"Error during mission: {e}", "error")
+                mission_running = False
+        if not mission_running:
+            break  
 
 
 
 def create_new_connection():
-    # Create the connection
-    master = mavutil.mavlink_connection("/dev/ttyACM0", baud=115200)
+
+    the_connection.close()
+
+   # Create the connection
+    the_connection = mavutil.mavlink_connection("/dev/ttyACM0", baud=115200)
     time.sleep(2)
     # Wait a heartbeat before sending commands
-    master.wait_heartbeat()
+    the_connection.wait_heartbeat()
 
     print("New Connection Made")
 
@@ -216,7 +262,6 @@ def mission_pause():
     print("Waiting for the vehicle pause mission")
     the_connection.motors_disarmed_wait()
     print('Mission Paused!')
-
 def manual_drive_mode():
     # Choose a mode
     mode = 'MANUAL'
@@ -238,4 +283,61 @@ def manual_drive_mode():
 
     print(f"Flight mode changed to {mode}")
 
-    
+def joystick2():
+    pygame.init()
+    pygame.joystick.init()
+
+    joystick = pygame.joystick.Joystick(0)
+    joystick.init()
+
+    the_connection.wait_heartbeat()
+
+    # Function to send manual control to Pixhawk
+    def send_manual_control(roll, pitch, throttle, yaw, buttons):
+        the_connection.mav.manual_control_send(
+            the_connection.target_system,    # Target system (Pixhawk)
+            int(roll * 1000),        # X-axis (roll)
+            int(pitch * 1000),       # Y-axis (pitch)
+            int(throttle * 1000),    # Z-axis (throttle)
+            int(yaw * 1000),         # R-axis (yaw)
+            buttons                  # Buttons bitmask
+        )
+
+    # Map joystick inputs to MAVLink control signals
+    while True:
+        pygame.event.pump()
+        
+        # Left joystick: Throttle and Yaw
+        throttle = joystick.get_axis(1)  # Y-axis (forward/backward) - Throttle
+        yaw = joystick.get_axis(0)       # X-axis (left/right) - Yaw
+        
+        # Right joystick: Roll and Pitch
+        roll = joystick.get_axis(3)      # X-axis (left/right) - Roll
+        pitch = joystick.get_axis(4)     # Y-axis (forward/backward) - Pitch
+        
+        # Read button presses (optional)
+        button_bitmask = 0
+        if joystick.get_button(0):  # Button 0 for arming/disarming
+            button_bitmask |= (1 << 0)
+        
+        # Send manual control to Pixhawk
+        send_manual_control(roll, pitch, throttle, yaw, button_bitmask)
+
+        def handle_button_press():
+            # Button 0: Arm the drone
+            if joystick.get_button(0):
+                print("Arming the drone")
+                the_connection.arducopter_arm()
+
+            # Button 1: Disarm the drone
+            if joystick.get_button(1):
+                print("Disarming the drone")
+                the_connection.arducopter_disarm()
+
+            # Button 2: Switch flight mode
+            if joystick.get_button(2):
+                print("Switching to GUIDED mode")
+                the_connection.set_mode_px4('GUIDED')
+
+        # In the main loop:
+        handle_button_press()
