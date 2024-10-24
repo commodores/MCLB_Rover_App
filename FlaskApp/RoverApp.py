@@ -2,12 +2,7 @@ import time
 from flask import Flask, jsonify, redirect, url_for, render_template, request, flash, session
 from pymavlink import mavutil
 from datetime import timedelta
-import math
-from threading import Lock
-import threading
 
-
-import serial
 from paths.commands import arm_rover, disarm_rover, mission_reset, auto_mode, control_rover, reset_connection, mission, manual_drive_mode, joystick2
 
 
@@ -75,35 +70,6 @@ def home():
 
 
 
-
-@app.route("/old", methods=["POST", "GET"])
-def old():
-    if request.method == "POST":
-        if "enable" in request.form:
-            flash("Armed")
-            arm_rover()
-            return render_template('index.html', flash("Armed"))      
-        elif "disable" in request.form:
-            disarm_rover()
-            return render_template("index.html", armed = "Disabled")
-        elif "reset_path" in request.form:
-            mission_reset()
-            return render_template("index.html", armed = "Disabled")
-        elif "warehouse" in request.form:
-            render_template("index.html")
-        return mission()
-       
-    else:
-            return render_template("index.html")
-   
-#@app.route('/name', methods=["POST", "GET"])
-
-
-
-
-#@app.route("/<usr>")
-#def user(usr):
- #   return f"<h1>{usr}</h1>"
 
 
 
