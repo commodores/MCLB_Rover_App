@@ -2,6 +2,8 @@ import time
 from flask import Flask, jsonify, redirect, url_for, render_template, request, flash, session
 from pymavlink import mavutil
 from datetime import timedelta
+from flask_socketio import SocketIO, send, emit
+import asyncio
 
 from paths.commands import arm_rover, disarm_rover, mission_reset, auto_mode, control_rover, reset_connection, mission, manual_drive_mode, joystick2
 
@@ -9,7 +11,8 @@ from paths.commands import arm_rover, disarm_rover, mission_reset, auto_mode, co
 
 
 app = Flask(__name__)
-
+app.config['SECRET_KEY'] = 'secret'
+socketio = SocketIO(app, async_mode="eventlet", threaded=True)
 
 
 # Initialize key and session
@@ -75,5 +78,6 @@ def home():
 
 
 if __name__ == "__main__":
-    app.run(host='rover.local', port=5000, debug=True)
+    #app.run(host='rover.local', port=5000, debug=True)
+    socketio.run(app.run(host='rover.local', port=5000, debug=True))
 
