@@ -1,5 +1,5 @@
 # Import mavutil
-from asyncio import open_connection
+
 import math
 from pymavlink import mavutil
 

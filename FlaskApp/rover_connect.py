@@ -2,4 +2,4 @@
 from .extensions import rover_connection
 
 
-# You can add additional rover-specific functions here if needed
+# add additional rover-specific functions here if needed

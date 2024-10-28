@@ -21,12 +21,9 @@ def create_app():
 
 # Background task to read MAVLink messages
 def mavlink_listener():
-    last_heartbeat_time = time.time()
-    connected = False
-
     while True:
         # Check for heartbeat message
-        msg = rover_connection.recv_match(type='HEARTBEAT', blocking=True, timeout=1)
+        msg = rover_connection.recv_match(type='HEARTBEAT', blocking=True)
         print("Rover connected")
         
         if msg:

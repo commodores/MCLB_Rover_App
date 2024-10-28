@@ -2,9 +2,11 @@ from FlaskApp import create_app, mavlink_listener, socketio
 
 app = create_app()
 
+socketio.start_background_task(mavlink_listener)
+
 socketio.run(app)
 
-socketio.start_background_task(mavlink_listener)
+
 
 
 

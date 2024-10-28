@@ -6,7 +6,7 @@ import math
 import pygame
 from pymavlink import mavutil
 import serial
-from paths.auto import auto, upload_misssion, set_return, start_mission
+from auto import auto, upload_misssion, set_return, start_mission
 from commands.arm import arm_rover
 from flask import Flask, flash, logging
 from pymavlink import mavutil 
@@ -252,6 +252,13 @@ def mission_pause():
         0, # Confirmation
         19,  # 19 pauses the mission (20 would continue the mission)
         0, 0, 0, 0, 0, 0)
+    
+    rover_connection.mav.set_mode_send(
+        rover_connection.target_system,
+        rover_connection.target_component,
+        mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+        HOLD_MODE
+    )
 
     # wait until disarming confirmed
     print("Waiting for the vehicle pause mission")
