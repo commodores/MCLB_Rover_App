@@ -8,6 +8,7 @@ from .routes import main
 from .rover_connect import rover_connection
 
 
+
 def create_app():
     app = Flask(__name__)
     app.config["DEBUG"] = True
@@ -45,3 +46,6 @@ def mavlink_listener():
         msg = rover_connection.recv_match(blocking=False)
         if msg:
             socketio.emit("mavlink_message", msg.to_dict())
+
+
+

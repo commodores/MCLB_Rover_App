@@ -8,11 +8,17 @@ import time
 from flask import flash
 import pygame
 from pymavlink import mavutil
+from threading import Lock, Thread
 from .misson import auto, upload_misssion, set_return, start_mission
 from .extensions import socketio, rover_connection
 
 
+#Global var
+disabled_triggered = False
+lock = Lock()
+
 HOLD_MODE = 4 
+
 @socketio.on("connect")
 def handle_connect():
     print("User Connected")
@@ -21,38 +27,61 @@ def handle_connect():
 
 @socketio.on("send_command")
 def handle_command(data):
+    global disabled_triggered
+
     command = data.get("command")
+
+    with lock:
+            if disabled_triggered:
+                
+                if command == "disable":
+                    disabled_triggered = True
+                    disarm_rover()
+                elif command == "enable":
+                    disabled_triggered = False
+                    arm_rover()
+                else:
+                   print("Disable priority: Ignoring command", command)
+                   socketio.emit("messages", {"message": f"Disable priority: Ignoring command{command}"})
+                return
+                        
+    if command == "disable":
+            disabled_triggered = True
+            disarm_rover()
+            return
+
     if command == "enable":
         arm_rover()
     #elif command == "disable":
-     #   disarm_rover() #This works
+        #   disarm_rover() #This works
     elif command =="reset_rover_connection":
         reset_rover_connection()
     elif command == "auto_mode":
         auto_mode()
     elif command == "manual_mode":
         manual_mode()
-    #elif command == "mission":
-     #   mission() #this works just trying smth
+    elif command == "mission":
+        mission() #this works just trying smth
     elif command == "stop_mission":
         stop_mission()
     elif command == "reset_misson":
         reset_mission()
     else:
-        socketio.emit("status", {"message": f"Unknown command: {command}"})
-
-#Just trying smth
-socketio.on("mission")
-def handle_start_mission_command():
-    mission()
+        socketio.emit("messages", {"message": f"Unknown command: {command}"})
 
 
-#Just trying smth. Making single threads for mission and disable button
-socketio.on("disable")
-def handle_disable_command():
-    disarm_rover()
+
+#Disable Functions
+
+        
     
 # ARMING FUNCTIONS
+
+def disable_rover():
+    print("Disabling rover...")
+    disarm_rover()  # First, disarm the rover to halt any movement
+    time.sleep(0.2)  # Brief pause to ensure disarm command registers
+    stop_mission()   # Then clear any ongoing mission commands
 
 def arm_rover():
     rover_connection.mav.command_long_send(
@@ -61,20 +90,28 @@ def arm_rover():
         mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
         0, 1, 0, 0, 0, 0, 0, 0
     )
-    socketio.emit("status", {"message": "Rover armed"})
+    socketio.emit("status", {"message": "Rover ARMED"})
     print("Armed")
+    
+    
+   
+
 
 
 def disarm_rover():
-    rover_connection.mav.command_long_send(
-        rover_connection.target_system,
-        rover_connection.target_component,
-        mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
-        0, 0, 0, 0, 0, 0, 0, 0
-    )
-    socketio.emit("status", {"message": "Rover disarmed"})
-    print("disarm")
-
+     if rover_connection:
+        # Command to disarm the rover
+        rover_connection.mav.command_long_send(
+            rover_connection.target_system,
+            rover_connection.target_component,
+            mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
+            0,  # Confirmation
+            0,  # Disarm (set to 1 to arm)
+            0, 0, 0, 0, 0, 0  # Additional parameters are not used here
+        )
+        socketio.emit("status", {"message": "Rover Disarmed"})
+        print("Rover DISARMED")
+       
 
 # CONNECTION FUNCTIONS
 def reset_rover_connection():
@@ -88,6 +125,7 @@ def reset_rover_connection():
     rover_connection.wait_heartbeat()
 
     print("New Connection Made")
+    socketio.emit("messages", {"message": "New Connection is Made"})
 
 
 # MODE FUNCTIONS
@@ -100,11 +138,6 @@ def auto_mode():
     # Choose a mode
     mode = 'AUTO'
 
-    # Check if mode is available
-    if mode not in rover_connection.mode_mapping():
-        print('Unknown mode : {}'.format(mode))
-        print('Try:', list(rover_connection.mode_mapping().keys()))
-        sys.exit(1)
 
     # Get mode ID
     mode_id = rover_connection.mode_mapping()[mode]
@@ -118,21 +151,11 @@ def auto_mode():
         rover_connection.target_system,
         mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
         mode_id)
+    print(f"Flight mode changed to {mode}")
+    socketio.emit("messages", {"message": f"Rover is in {mode}"})
 
-    while True:
-        # Wait for ACK command
-        # Would be good to add mechanism to avoid endlessly blocking
-        # if the autopilot sends a NACK or never receives the message
-        ack_msg = rover_connection.recv_match(type='COMMAND_ACK', blocking=True)
-        ack_msg = ack_msg.to_dict()
+   
 
-        # Continue waiting if the acknowledged command is not `set_mode`
-        if ack_msg['command'] != mavutil.mavlink.MAV_CMD_DO_SET_MODE:
-            continue
-
-        # Print the ACK result !
-        print(mavutil.mavlink.enums['MAV_RESULT'][ack_msg['result']].description)
-        break
 
 
 def manual_mode():
@@ -142,15 +165,6 @@ def manual_mode():
     # Get mode ID
     mode_id = rover_connection.mode_mapping()[mode]
 
-    
-    # Check if mode is available
-    if mode not in rover_connection.mode_mapping():
-        print('Unknown mode : {}'.format(mode))
-        flash('Unknown mode : {}'.format(mode))
-        print('Try:', list(rover_connection.mode_mapping().keys()))
-        sys.exit(1)
-        flash('Try:', list(rover_connection.mode_mapping().keys()))
-        sys.exit(1)
 
     rover_connection.mav.set_mode_send(
     rover_connection.target_system,
@@ -158,17 +172,25 @@ def manual_mode():
     mode_id)
 
     print(f"Flight mode changed to {mode}")
-    flash(f"Flight mode changed to {mode}")
+    socketio.emit("messages", {"message": f"Rover is in {mode}"})
 
-def joystick2():
+    # Initilze pygame and joystics
     pygame.init()
     pygame.joystick.init()
+
+    # Check the number of joysticks
+    joystick_count = pygame.joystick.get_count()
+    if joystick_count == 0:
+        print("No joystick detected.")
+        sys.exit()
+
 
     joystick = pygame.joystick.Joystick(0)
     joystick.init()
 
     rover_connection.wait_heartbeat()
 
+    print("Joysticks Connected")
     # Function to send manual control to Pixhawk
     def send_manual_control(roll, pitch, throttle, yaw, buttons):
         rover_connection.mav.manual_control_send(
@@ -221,37 +243,45 @@ def joystick2():
 
         # In the main loop:
         handle_button_press()
+        
 
 
 # MISSION FUNCTIONS
 
 def stop_mission():
+   #Works
 
-    rover_connection.mav.set_mode_send(
-        rover_connection.target_system,
-        rover_connection.target_component,
-        mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-        HOLD_MODE
-    )
+   if rover_connection:
+        # Set rover to MANUAL mode to override any autonomous actions
+        rover_connection.mav.set_mode_send(
+            rover_connection.target_system,
+            mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+            0  # Custom mode for MANUAL; adjust based on your vehicle setup
+        )
+        socketio.emit("messages", {"message": "Mission is Paused"})
+        print("mission is paused and stopped")
 
 
-    # wait until disarming confirmed
-    print("Waiting for the vehicle pause mission")
-    flash("Waiting for the vehicle to pause mission")
-    rover_connection.motors_disarmed_wait()
-    print('Mission Paused!')
-    flash("Mission Pause")
+       
 
 
 def reset_mission():
 
-    rover_connection.mav.command_long_send(
-        rover_connection.target_system,    # Target system (your vehicle)
-        rover_connection.target_component, # Target component (usually MAV_COMP_ID_ALL)
-        mavutil.mavlink.MAV_CMD_MISSION_CLEAR_ALL,  # Command ID for clearing all missions
-        0,                                  # Confirmation (set to 0)
-        0, 0, 0, 0, 0, 0                   # Parameters (not used for this command)
-    )
+    if rover_connection:
+
+        print("Starting long mav send")
+        rover_connection.mav.command_long_send(
+
+            rover_connection.target_system, 
+            print("found vehical"),   # Target system (your vehicle)
+            rover_connection.target_component,
+            print("found componenet"), # Target component (usually MAV_COMP_ID_ALL)
+            mavutil.mavlink.MAV_CMD_MISSION_CLEAR_ALL,  # Command ID for clearing all missions
+            0,                                  # Confirmation (set to 0)
+            0, 0, 0, 0, 0, 0                   # Parameters (not used for this command)
+        )
+        socketio.emit("messages", {"message": "Mission is Reset"})
+        print("mission is reset.")
 
 
 def mission():
@@ -274,16 +304,17 @@ def mission():
  
 
     print("-- Program Started")
-    flash("Program Started")
+    socketio.emit("messages", {"message": "Program Started"})
 
     while(rover_connection.target_system == 0):
         print("-- Checking Heartbeat")
-        flash("Checking Heartbeat")
+        socketio.emit("messages", {"message": "Checking Heart Beat"})
 
         rover_connection.wait_heartbeat()
         print(" -- heatbeat from system (system %u component %u)" % (rover_connection.target_system, rover_connection.target_component))
-        flash("heatbeat from system (system %u component %u)" % (rover_connection.target_system, rover_connection.target_component))
+        socketio.emit("messages", {"message": f"heatbeat from system {rover_connection.target_system, rover_connection.target_component}"})
 
+    socketio.emit("messages", {"message": "Creating Way Points"})
     mission_waypoints = []
 
     mission_waypoints.append(mission_item(0, 0, 59.000000, 1, 0))
@@ -293,19 +324,24 @@ def mission():
 
     upload_misssion(rover_connection, mission_waypoints)
     print(" -- All Waypoints Created and Uploaded")
+    socketio.emit("messages", {"message": "All Waypoints Created and Uploaded"})
 
     auto(rover_connection)
     print("-- Rover put in Auto Mode")
+    socketio.emit("messages", {"message": "Rover is in Auto Mode"})
 
 
     start_mission(rover_connection)
     print("-- Mission Started")
+    socketio.emit("messages", {"message": "Mission Started"})
 
     for mission_item in mission_waypoints:
-            print("-- Message Read " + str(rover_connection.recv_match(type="MISSION_ITEM_REACHED", condition= "MISSION_ITEM_REACHED.seq =={0}".format(mission_item.seq), blocking =True)))
+            print("-- Message Read " + str(rover_connection.recv_match(type="MISSION_ITEM_REACHED", condition= "MISSION_ITEM_REACHED.seq =={0}".format(mission_item.seq))))
+            socketio.emit("messages", {"message": f"{rover_connection.recv_match(type="MISSION_ITEM_REACHED", condition = "MISSION_ITEM_REACHED =={0}".format(mission_item.seq))}"})
 
     set_return(rover_connection)
     print(" -- Rover returning")
+    socketio.emit("messages", {"message": "Rover is Returning to Set Position"})
 
 
 
