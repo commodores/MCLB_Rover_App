@@ -175,8 +175,14 @@ def manual_mode():
     socketio.emit("messages", {"message": f"Rover is in {mode}"})
 
     # Initilze pygame and joystics
+
     pygame.init()
     pygame.joystick.init()
+    joystick = []
+    joystick = pygame.joystick.Joystick(0)
+    joystick.init()
+
+    
 
     # Check the number of joysticks
     joystick_count = pygame.joystick.get_count()
@@ -185,8 +191,6 @@ def manual_mode():
         sys.exit()
 
 
-    joystick = pygame.joystick.Joystick(0)
-    joystick.init()
 
     rover_connection.wait_heartbeat()
 
@@ -205,7 +209,22 @@ def manual_mode():
     # Map joystick inputs to MAVLink control signals
     while True:
         pygame.event.pump()
+
+          #event handler
+        for event in pygame.event.get():
+            if event.type == pygame.JOYDEVICEADDED:
+               # print(event)
+                pygame.joystick.Joystick(event.device_index)
+                print("Joysticks Connected")
+            if event.type == pygame.QUIT:
+                pygame.quit()
+        if disabled_triggered:
+            roll, pitch, throttle, yaw = 0, 0, 0, 0
         
+        
+        # Define a deadband threshold
+        DEADBAND = 0.1
+
         # Left joystick: Throttle and Yaw
         throttle = joystick.get_axis(1)  # Y-axis (forward/backward) - Throttle
         yaw = joystick.get_axis(0)       # X-axis (left/right) - Yaw
@@ -214,6 +233,16 @@ def manual_mode():
         roll = joystick.get_axis(3)      # X-axis (left/right) - Roll
         pitch = joystick.get_axis(4)     # Y-axis (forward/backward) - Pitch
         
+        if abs(throttle) < DEADBAND :
+           throttle = 0
+        if abs(yaw)  < DEADBAND:
+            yaw = 0
+        if abs(roll)  < DEADBAND:
+            roll = 0
+        if abs(pitch)  < DEADBAND:
+            pitch = 0
+
+
         # Read button presses (optional)
         button_bitmask = 0
         if joystick.get_button(0):  # Button 0 for arming/disarming
@@ -222,29 +251,33 @@ def manual_mode():
         # Send manual control to Pixhawk
         send_manual_control(roll, pitch, throttle, yaw, button_bitmask)
 
-        def handle_button_press():
+         # Debugging output
+        print(f"Joystick Values - Throttle: {throttle}, Yaw: {yaw}, Roll: {roll}, Pitch: {pitch}, Button Bitmask: {button_bitmask}")
+
+       # def handle_button_press():
             # Button 0: Arm the drone
-            if joystick.get_button(0):
-                print("Arming the Rover")
-                flash("Arming the Rover")
-                rover_connection.arducopter_arm()
+        #    if joystick.get_button(0):
+          #      print("Arming the Rover") 
+         #       rover_connection.arducopter_arm()
 
             # Button 1: Disarm the drone
-            if joystick.get_button(1):
-                print("Disarming the Rover")
-                flash("Diarming the Rover")
-                rover_connection.arducopter_disarm()
+           # if joystick.get_button(1):
+            #    print("Disarming the Rover")
+             #   rover_connection.arducopter_disarm()
 
             # Button 2: Switch flight mode
-            if joystick.get_button(2):
-                print("Switching to GUIDED mode")
-                flash("Switching to GUIDED mode")
-                rover_connection.set_mode_px4('GUIDED')
+            #if joystick.get_button(2):
+             #   print("Switching to GUIDED mode")
+              #  rover_connection.set_mode_px4('AUTO')
 
         # In the main loop:
-        handle_button_press()
-        
+        #handle_button_press()
 
+        
+               
+    
+        
+    
 
 # MISSION FUNCTIONS
 
