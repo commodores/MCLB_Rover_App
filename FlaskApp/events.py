@@ -368,9 +368,9 @@ def mission():
     print("-- Mission Started")
     socketio.emit("messages", {"message": "Mission Started"})
 
-    for mission_item in mission_waypoints:
-            print("-- Message Read " + str(rover_connection.recv_match(type="MISSION_ITEM_REACHED", condition= "MISSION_ITEM_REACHED.seq =={0}".format(mission_item.seq))))
-            socketio.emit("messages", {"message": f"{rover_connection.recv_match(type="MISSION_ITEM_REACHED", condition = "MISSION_ITEM_REACHED =={0}".format(mission_item.seq))}"})
+    #for mission_item in mission_waypoints:
+            #print("-- Message Read " + str(rover_connection.recv_match(type="MISSION_ITEM_REACHED", condition= "MISSION_ITEM_REACHED.seq =={0}".format(mission_item.seq))))
+            #socketio.emit("messages", {"message": f"{rover_connection.recv_match(type="MISSION_ITEM_REACHED", condition = "MISSION_ITEM_REACHED =={0}".format(mission_item.seq))}"})
 
     set_return(rover_connection)
     print(" -- Rover returning")
