@@ -6,7 +6,7 @@ import math
 import pygame
 from pymavlink import mavutil
 import serial
-from auto import auto, upload_misssion, set_return, start_mission
+from commands.auto import auto, upload_misssion, set_return, start_mission
 from commands.arm import arm_rover
 from flask import Flask, flash, logging
 from pymavlink import mavutil 

@@ -1,7 +1,7 @@
 from pymavlink import mavutil
-from FlaskApp.paths import joystick
+from commands import joystick
 import pygame
-from paths import joysticksTwo
+from commands import joysticksTwo
 
 # Connect to Pixhawk
 master = mavutil.mavlink_connection('udp:127.0.0.1:14550')
