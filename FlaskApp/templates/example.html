@@ -144,14 +144,15 @@
         <div class="card">
             <h2>Rover Settings</h2>
                 <label for="settings-dropdown">Select Mission:</label>
-                <select id="settings-dropdown">
+                <select id="commandSelect">
                     <option>None</option>
-                    <option name="warehouse">To Warehouse</option>
-                    <option name="home">Home</option>
+                    <option value = "warehouse">To Warehouse</option>
+                    <option value ="home">Home</option>
                 </select>
                 <br><br>
-                <button onclick = "sendCommand('mission')" >Submit Mission</button>
-                <button onclick = "sendCommand('stop_mission')">Start Mission</button>
+                <button onclick = "submitCommand()" >Submit Mission</button>
+               <!--- <button onclick = "sendCommand('mission')" >Submit Mission</button> -->
+               <!--- <button onclick = "sendCommand('stop_mission')">Stop Mission</button>-->
                 <button onclick="sendCommand('reset_mission')">Reset Mission</button>
                 <button onclick = "sendCommand('reset_rover_connection')">Reset Rover Connection</button>
                 <button onclick = "sendCommand('auto_mode')">Auto Mode</button>
@@ -168,15 +169,15 @@
         <!-- Rover Messages Card -->
         <div class="card">
             <h2>Rover Messages</h2>
-            <div id="messages" style="color: green; font-weight: bold;"></div> <!-- Message Display Area -->
+            <div id="messages" style="overflow-y: auto; color:green ; font-weight: bold;"></div> <!-- Message Display Area -->
             <!-- Display flashed messages -->
             </div>
     </div>
 
     <!-- Enable/Disable Buttons -->
         <div class="footer-buttons">
-            <button class="enable" name="enable" onclick = "sendCommand('enable')">Enable</button>
-            <button class="disable" name="disable" onclick = "sendCommand('disable')">Disable</button>
+            <button class="enable" name="enable" onclick = "sendCommand('enable')">Arm</button>
+            <button class="disable" name="disable" onclick = "sendCommand('disable')">Disarm</button>
         </div>
   
         <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
@@ -200,6 +201,22 @@
                     console.log("Command sent:", $(command));
     
                 }
+
+                function submitCommand(){
+                    const selectedCommand = document.getElementById('commandSelect').value
+                    if (selectedCommand == 'warehouse'){
+                        console.log('Sending warehouse command')
+                        sendCommand('warehouse')
+                        
+                    } else if (selectedCommand == 'home'){
+                        console.log('Sending home command')
+                        sendCommand('home')
+                        
+                    }
+                }
+
+
+
                 // Listen for staus message from server
                 socket.on("status", (data) => {
                     console.log(data.messages)
@@ -212,7 +229,10 @@
                     console.log(data.messages)
                        // Display the message in the UI
                     const messageDiv = document.getElementById("messages");
-                    messageDiv.innerText = data.message; // Update the div with the received message
+                    messageDiv.textContent = data.message;
+                    // Update the div with the received message
+
+                    messageDiv.scrollTop = messageDiv.scrollHeight;
                 });
 
 
