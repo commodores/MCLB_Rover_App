@@ -11,7 +11,8 @@ from pymavlink import mavutil
 from threading import Lock, Thread
 
 from .extensions import socketio
-from .commands.event_commands import arm_rover, disarm_rover, reset_mission, reset_rover_connection, manual_mode, auto_mode, mission, stop_mission, home_mission
+from .commands.event_commands import arm_rover, disarm_rover, reset_mission, reset_rover_connection, manual_mode, auto_mode, stop_mission
+from .paths.mission_commands import home_mission, bus_ramp, mission
 
 
 #Global variables
@@ -24,6 +25,14 @@ HOLD_MODE = 4
 @socketio.on("connect")
 def handle_connect():
     print("User Connected")
+    socketio.emit("messages", {"message": "User Connected"})
+    disarm_rover()
+    manual_mode()
+
+     
+
+
+
 
 # Additional events for command handling can be added here, e.g., for controlling the rover
 @socketio.on("send_command")
@@ -41,17 +50,17 @@ def handle_command(data):
                 elif command == "enable":
                     disabled_triggered = False
                     arm_rover()
-                else:
-                   disabled_triggered = False
+                #else:
+                  # disabled_triggered = False
                   # print("Disable priority: Ignoring command", command)
                    #socketio.emit("messages", {"message": f"Disable priority: Ignoring command{command}"})
-                return
+                #return
                         
     if command == "disable":
             disabled_triggered = True
             disarm_rover()
             return
-
+    
     if command == "enable":
         arm_rover()
     if command =="reset_rover_connection":
@@ -64,10 +73,13 @@ def handle_command(data):
         mission()
     if command == "home":
         home_mission()
+    if command == "bus_ramp":
+         bus_ramp()
     if command == "stop_mission":
         stop_mission()
     if command == "reset_mission":
         reset_mission()
+   
     
 
 

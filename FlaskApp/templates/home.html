@@ -121,21 +121,37 @@
         opacity: 0.9;
     }
 
+
+    #chat-container {
+            height: 400px; /* Adjust height as needed */
+            border: 1px solid #333;
+            border-radius: 5px;
+            overflow-y: scroll;
+            padding: 10px;
+            display: flex;
+            flex-direction: column; /* Ensure new messages are added at the bottom */
+        }
+
+        .messages {
+            padding: 15x;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #ddd;
+        }
     
     </style>
 <body>
     <!-- Navbar -->
     <nav>
         <ul>
-            <li><a href="#">Home</a></li>
-            <li><a href="#">Settings</a></li>
+            <li><a href="home.html">Home</a></li>
+            <li><a href="help.html">Help</a></li>
             <li><a href="#">About</a></li>
         </ul>
     </nav>
 
     <!-- Header -->
     <header>
-        <h1>Haz Bot</h1>
+        <h1>Haz Bot Control Panel</h1>
     </header>
 
     <!-- Main content section -->
@@ -145,16 +161,17 @@
             <h2>Rover Settings</h2>
                 <label for="settings-dropdown">Select Mission:</label>
                 <select id="commandSelect">
-                    <option>None</option>
+                    <option value = "">None</option>
                     <option value = "warehouse">To Warehouse</option>
                     <option value ="home">Home</option>
+                    <option value="bus_ramp">Bus Ramp</option>
                 </select>
                 <br><br>
                 <button onclick = "submitCommand()" >Submit Mission</button>
                <!--- <button onclick = "sendCommand('mission')" >Submit Mission</button> -->
                <!--- <button onclick = "sendCommand('stop_mission')">Stop Mission</button>-->
                 <button onclick="sendCommand('reset_mission')">Reset Mission</button>
-                <button onclick = "sendCommand('reset_rover_connection')">Reset Rover Connection</button>
+               <!--- <button onclick = "sendCommand('reset_rover_connection')">Reset Rover Connection</button> -->
                 <button onclick = "sendCommand('auto_mode')">Auto Mode</button>
                 <button onclick = "sendCommand('manual_mode')">Manual Mode</button>
         </div>
@@ -169,10 +186,10 @@
         <!-- Rover Messages Card -->
         <div class="card">
             <h2>Rover Messages</h2>
-            <div id="messages" style="overflow-y: auto; color:green ; font-weight: bold;"></div> <!-- Message Display Area -->
+            <div id="chat-container" style="overflow-y: auto; color:green ; font-weight: bold;"></div> <!-- Message Display Area -->
             <!-- Display flashed messages -->
             </div>
-    </div>
+        </div>
 
     <!-- Enable/Disable Buttons -->
         <div class="footer-buttons">
@@ -216,7 +233,6 @@
                 }
 
 
-
                 // Listen for staus message from server
                 socket.on("status", (data) => {
                     console.log(data.messages)
@@ -225,15 +241,37 @@
                     statusDiv.innerText = data.message; // Update the div with the received message
                 });
 
-                socket.on("messages", (data) => {
-                    console.log(data.messages)
+               // socket.on("messages", (data) => {
+                 //   console.log(data.messages)
                        // Display the message in the UI
-                    const messageDiv = document.getElementById("messages");
-                    messageDiv.textContent = data.message;
+                   // const messageDiv = document.getElementById("messages");
+                    //messageDiv.textContent = data.message;
                     // Update the div with the received message
 
-                    messageDiv.scrollTop = messageDiv.scrollHeight;
-                });
+                    //messageDiv.scrollTop = messageDiv.scrollHeight;
+                //});
+
+
+                // Simulate receiving a message from the server
+        socket.on('messages', (data) => {
+            const chatContainer = document.getElementById('chat-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'messages';
+            messageDiv.textContent = data.message;
+            
+            chatContainer.prepend(messageDiv); // Add new messages at the top for reverse scrolling behavior
+        });
+
+        // Optional: Scroll to bottom on new message, only if not manually scrolled up
+        const chatContainer = document.getElementById('chat-container');
+        chatContainer.addEventListener('scroll', () => {
+            // Logic to handle manual scroll state (if needed)
+        });
+
+        // Simulate emitting a new message (for testing purposes)
+        setInterval(() => {
+            socket.emit('messages', `Random message: ${new Date().toLocaleTimeString()}`);
+        }, 3000);
 
 
         </script>
