@@ -136,7 +136,15 @@
             padding: 15x;
             margin-bottom: 5px;
             border-bottom: 1px solid #ddd;
+            align-items: left;
         }
+
+        @media (max-width: 768px) {
+        .container {
+            flex-direction: column;
+            align-items: center;
+        }
+    }
     
     </style>
 <body>
@@ -165,6 +173,7 @@
                     <option value = "warehouse">To Warehouse</option>
                     <option value ="home">Home</option>
                     <option value="bus_ramp">Bus Ramp</option>
+                    
                 </select>
                 <br><br>
                 <button onclick = "submitCommand()" >Submit Mission</button>
@@ -185,7 +194,7 @@
 
         <!-- Rover Messages Card -->
         <div class="card">
-            <h2>Rover Messages</h2>
+            <h2>Rover Log</h2>
             <div id="chat-container" style="overflow-y: auto; color:green ; font-weight: bold;"></div> <!-- Message Display Area -->
             <!-- Display flashed messages -->
             </div>
@@ -229,7 +238,10 @@
                         console.log('Sending home command')
                         sendCommand('home')
                         
-                    }
+                    } else if (selectedCommand == 'bus_ramp')
+                    console.log("Sending bus_ramp command")
+                    sendCommand('bus_ramp')
+                    
                 }
 
 
@@ -258,6 +270,7 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = 'messages';
             messageDiv.textContent = data.message;
+            messageDiv.textContent = `[${new Date().toLocaleTimeString()}] ${data.message}`;
             
             chatContainer.prepend(messageDiv); // Add new messages at the top for reverse scrolling behavior
         });
@@ -266,6 +279,7 @@
         const chatContainer = document.getElementById('chat-container');
         chatContainer.addEventListener('scroll', () => {
             // Logic to handle manual scroll state (if needed)
+          
         });
 
         // Simulate emitting a new message (for testing purposes)
