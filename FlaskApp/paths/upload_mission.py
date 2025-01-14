@@ -1,6 +1,8 @@
 #Functions for submitting waypoints
 
+from asyncio.log import logger
 import math
+import time
 from pymavlink import mavutil
 from FlaskApp.extensions import socketio, rover_connection
 
@@ -39,6 +41,22 @@ def auto(rover_connection):
     ack(rover_connection, "COMMAND_ACK")
    
    # ack(rover_connection, "COMMAND_ACK")
+   
+def get_current_location(self, timeout=10):
+        """Retrieves the current location of the drone."""
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            message = self.master.recv_match(type='GLOBAL_POSITION_INT', blocking=True, timeout=1)
+            if message:
+                lat = message.lat / 1e7
+                lon = message.lon / 1e7
+                alt = message.alt / 1000.0
+                logger.info(f"Current Location - Latitude: {lat}, Longitude: {lon}, Altitude: {alt} m")
+                return lat, lon, alt
+        raise TimeoutError("Failed to get current location")
+
+ 
+
    
 
 #Upload Mission
@@ -84,6 +102,7 @@ def ack(rover_connection, keyword):
 
 
 
+
   # Example Function to upload mission
 
     if __name__ == "__main__":
@@ -95,6 +114,19 @@ def ack(rover_connection, keyword):
             print("-- Checking Heartbeat")
             rover_connection.wait_heartbeat()
             print(" -- heatbeat from system (system %u component %u)" % (rover_connection.target_system, rover_connection.target_component))
+            # Choose a mode
+        mode = 'AUTO'
+
+        # Get mode ID
+        mode_id = rover_connection.mode_mapping()[mode]
+
+        # Set new mode
+        rover_connection.mav.set_mode_send(
+            rover_connection.target_system,
+            mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+            mode_id)
+        print(f"Flight mode changed to {mode}")
+        socketio.emit("messages", {"message": f"Rover is in {mode}"})
 
         mission_waypoints = []
 
