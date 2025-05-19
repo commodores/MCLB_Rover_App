@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haz Bot</title>
+    <link rel="stylesheet" href="example.css">
+</head>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+
+
+<style>/* General Reset */
+      /* General Styling */
+      body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        /* Navbar styling */
+    nav {
+        background-color: #333;
+        padding: 10px;
+    }
+    
+    nav ul {
+        list-style: none;
+        display: flex;
+        justify-content: space-around;
+    }
+    
+    nav ul li a {
+        color: white;
+        text-decoration: none;
+        font-size: 18px;
+    }
+    
+    nav ul li a:hover {
+        color: #ddd;
+    }
+    
+
+        header {
+            text-align: center;
+            padding: 5px;
+            background-color: #e0e0e0;
+            border-bottom: 2px solid #ccc;
+        }
+
+        header h1 {
+            margin-bottom: 10px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 10px auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .container h2 {
+            border-bottom: 2px solid #333;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+        }
+
+        .container h3 {
+            margin-top: 20px;
+            color: #444;
+        }
+
+        .container p, .container ul {
+            margin: 10px 0;
+        }
+
+        .container ul {
+            padding-left: 20px;
+        }
+
+        .container li {
+            margin-bottom: 5px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 5px;
+            background-color: #333;
+            color: #fff;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            nav ul li a {
+                font-size: 16px;
+            }
+        }
+
+    
+    </style>
+<body>
+    <!-- Navbar -->
+    <nav>
+        <ul>
+            <li><a href="home.html">Home</a></li>
+            <li><a href="help.html">Help</a></li>
+            <li><a href="#">About</a></li>
+        </ul>
+    </nav>
+    
+
+    <!-- Main Content Section -->
+    <div class="container">
+        <h2>How to Use Control Panel</h2>
+        <p>Welcome to Haz Bot! This guide will help you navigate the features and functionalities of the website with ease.</p>
+        
+        <h3>1. Navigation Menu</h3>
+        <p>Use the navigation bar at the top to access different sections like Home, Help, and About.</p>
+        
+        <h3>2. Homepage Overview</h3>
+        <p>The homepage contains feature cards for easy interaction. Click on any card to explore its features.</p>
+            <ul>
+                <li><strong>Rover Settings</strong>: Select mission</li>
+                <li><strong>Rover Status</strong>: states if the rover is Disarmed or Armed</li>
+                <li><strong>Rover Messages</strong>: shows received data log informaiton back from the rover for analysis and diagnostics</li>
+            </ul>
+        
+        <h3>3. Button Explanations</h3>
+        <ul>
+            <li><strong>Arm</strong>: Arms the rover, enabling it for operation. Click this to prepare the rover for use.</li>
+            <li><strong>Disarm</strong>: Disarms the rover, ensuring it is safely deactivated. Use this to stop operations.</li>
+            <li><strong>Start Mission</strong>: Initiates a pre-programmed mission for the rover. Ensure the rover is armed before starting.</li>
+            <li><strong>Reset Mission </strong>: It immediately resets any active mission and clears it from the rover, allowing a new mission to be uploaded</li>
+            <li><strong>Auto Mode</strong>: Activates autonomous mode, allowing the rover to navigate without manual control and for missions to be uploaded if needed.</li>
+            <li><strong>Manual Mode</strong>: Deactivates autonomous mode, switching control back to manual operation.</li>
+        </ul>
+
+        <h3>4. RC Controller</h3>
+        <p>An RC controller should be attached to the rover. Once manual mode is selected and the rover is armed, you can use the controller to drive the rover.</p>
+        
+        <h3>5. Troubleshooting</h3>
+        <p>If issues arise, refresh the page or check your internet connection. Contact support if needed.</p>
+
+        <p>&copy; 2024 Haz Bot. All rights reserved.</p>
+    </div>
+
+
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 Haz Bot. All rights reserved.</p>
+    </footer>
+</body>
+</html>
+
+
