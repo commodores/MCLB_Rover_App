@@ -9,7 +9,7 @@ This application allows remote monitoring and control of the rover in real time,
 ## 📑 Table of Contents
 - [General Info](#general-info)
 - [Technologies](#technologies)
-- [Overview of Files](#overview-of-files)
+- [Project Overview](#project-overview)
 - [Setup](#setup)
 
 ---
@@ -75,3 +75,11 @@ pymavlink_app/
 │   │   └── help.html         # Help/documentation page for users
 ├── run.py                    # Entry point to launch the Flask server
 └── README.md                 # Project documentation
+
+---
+
+
+## Setup
+I still need to make the app into a boot file.
+1
+
