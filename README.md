@@ -64,15 +64,14 @@ The raspberry pi should boot up automatically.
 > **Note:** Currently, the app requires manual set up. Automating the app to start automatically when the Raspberry Pi boots is still a work in progress.
 
 ### 3. Open the Serial Port
-To allow communication with the rover, open a terminal and run: 
-sudo chmod 666 /dev/ttyACM0
+To allow communication with the rover, open a terminal and run: **sudo chmod 666 /dev/ttyACM0**
 
-⚠️ This grants temporary read/write access. There are ways to make this permanent, but they are not implemented yet.
+> **Note:** This grants temporary read/write access. There are ways to make this permanent, but they are not implemented yet.
 
 ### Run the App
-- Navigate to the app directory: cd pymavlink_app
+- Navigate to the app directory: **cd pymavlink_app**
 
-- Then run the application: python3 run.py
+- Then run the application: **python3 run.py**
 
 ### 5. Access the App in Your Browser
 The app will display a link in the terminal. Open that link in your browser.
@@ -82,6 +81,8 @@ Before using the rover, wait until the GPS light turns solid green.
 
 ### 7. Controls
 You should now be able to use the app to arm, disarm, upload missions, and perform other rover functions. Detailed instructions on how to use the app are available under the “Help” tab within the app.
+
+> **Note:** If you encounter issues, use the **Mission Planner** platform to troubleshoot. It provides detailed information about whether the app is correctly communicating with the flight controller, as well as additional diagnostic details.
 
 
 ## 📁 Project Structure Overview
@@ -108,7 +109,4 @@ pymavlink_app/
 └── README.md                 # Project documentation
 
 ---
-
-
-
 
