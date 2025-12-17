@@ -60,8 +60,8 @@ Managed in real time via a Python MAVLink connection (`mavutil`)
 Turn on the rover using the breaker.
 
 ### 2. Boot the App
-The app should start automatically.  
-> **Note:** Currently, you need to log in manually. Automating startup will be implemented in a future update.
+The raspberry pi should boot up automatically.  
+> **Note:** Currently, the app requires manual set up. Automating the app to start automatically when the Raspberry Pi boots is still a work in progress.
 
 ### 3. Open the Serial Port
 To allow communication with the rover, open a terminal and run: 
