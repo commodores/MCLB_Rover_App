@@ -53,6 +53,37 @@ Managed in real time via a Python MAVLink connection (`mavutil`)
 ---
 
 
+
+## Setup
+
+### 1. Power on the Rover
+Turn on the rover using the breaker.
+
+### 2. Boot the App
+The app should start automatically.  
+> **Note:** Currently, you need to log in manually. Automating startup will be implemented in a future update.
+
+### 3. Open the Serial Port
+To allow communication with the rover, open a terminal and run: 
+sudo chmod 666 /dev/ttyACM0
+
+⚠️ This grants temporary read/write access. There are ways to make this permanent, but they are not implemented yet.
+
+### Run the App
+- Navigate to the app directory: cd pymavlink_app
+
+- Then run the application: python3 run.py
+
+### 5. Access the App in Your Browser
+The app will display a link in the terminal. Open that link in your browser.
+
+### 6. Wait for GPS Lock
+Before using the rover, wait until the GPS light turns solid green.
+
+### 7. Controls
+You should now be able to use the app to arm, disarm, upload missions, and perform other rover functions. Detailed instructions on how to use the app are available under the “Help” tab within the app.
+
+
 ## 📁 Project Structure Overview
 
 ```plaintext
@@ -79,19 +110,5 @@ pymavlink_app/
 ---
 
 
-## Setup
-
-### 1. Power on the Rover
-Turn on the rover using the breaker.
-
-### 2. Boot the App
-The app should start automatically.  
-> **Note:** Currently, you need to log in manually. Automating startup will be implemented in a future update.
-
-### 3. Open the Serial Port
-To allow communication with the rover, open a terminal and run:
-
-```bash
-sudo chmod 666 /dev/ttyACM0
 
 
