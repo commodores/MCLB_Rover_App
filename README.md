@@ -80,6 +80,18 @@ pymavlink_app/
 
 
 ## Setup
-I still need to make the app into a boot file.
-1
+
+### 1. Power on the Rover
+Turn on the rover using the breaker.
+
+### 2. Boot the App
+The app should start automatically.  
+> **Note:** Currently, you need to log in manually. Automating startup will be implemented in a future update.
+
+### 3. Open the Serial Port
+To allow communication with the rover, open a terminal and run:
+
+```bash
+sudo chmod 666 /dev/ttyACM0
+
 
